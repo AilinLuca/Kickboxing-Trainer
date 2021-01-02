@@ -16,8 +16,8 @@ import ReactPlayer from "react-player";
 function App() {
   const [isRandom, setIsRandom] = useState(false);
   const [time, setTime] = useState(0);
-  const [countdown, setCountdown] = useState(0);
   const [combo, setCombo] = useState("");
+  const [countdown, setCountdown] = useState("00:00");
   const [playMusic] = useState(false);
 
   // Generates a random combo
@@ -43,7 +43,6 @@ function App() {
   // Resets countdown
   const resetCountdown = (e) => {
     e.preventDefault();
-    setCountdown(time);
   };
 
   // Loads a new combo on load only
@@ -51,12 +50,29 @@ function App() {
     newCombo();
   }, []);
 
+  // Used in above useEffect to correctly format the countdown display
+  const formatCountdown = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainderSeconds = seconds % 60;
+    const display = `${minutes}:${
+      remainderSeconds < 10 ? "0" : ""
+    }${remainderSeconds}`;
+    setCountdown(display);
+  };
+
   // Decrements time value when time is reset
   useEffect(() => {
-    setCountdown(time);
+    const now = Date.now();
+    const then = now + time * 60 * 1000;
+
     const intervalId = setInterval(() => {
-      setCountdown((prevCount) => (prevCount > 0 ? prevCount - 1 : 0));
-    }, 60000);
+      const seconds = Math.round((then - Date.now()) / 1000);
+      if (seconds < 0) {
+        clearInterval(intervalId);
+        return;
+      }
+      formatCountdown(seconds);
+    }, 1000);
     return () => clearInterval(intervalId);
   }, [time]);
 
@@ -75,7 +91,7 @@ function App() {
         <Grid item>
           <Paper className={"exercise-card"}>
             <h1>{combo}</h1>
-            <h3>{countdown} minutes left</h3>
+            <h1>{countdown}</h1>
           </Paper>
         </Grid>
         <Grid item>
